@@ -92,8 +92,12 @@ def start_loader():
 
     threading.Thread(target=run_task).start()
     print(GREEN + f"\n✅ Loader Started Successfully!" + RESET)
+    time.sleep(0.5)
     print(YELLOW + f"🆔 Your UNIQUE STOP KEY: {key}" + RESET)
-    print(CYAN + "⚠️ Use Option 2 to stop using this key.\n" + RESET)
+    time.sleep(0.5)
+    print(CYAN + "⚠️ Use Option 2 to stop using this key." + RESET)
+    time.sleep(0.5)
+    print(CYAN + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" + RESET)
 
 # 🛑 STOP LOADER
 def stop_loader():
@@ -128,7 +132,7 @@ def show_logo():
     print("██║╚████║██╔══██║██╔═══╝░██╔══╝░░██╔══╝░░██║╚████║")
     print("██║░╚███║██║░░██║██║░░░░░███████╗███████╗██║░╚███║")
     print("╚═╝░░╚══╝╚═╝░░╚═╝╚═╝░░░░░╚══════╝╚══════╝╚═╝░░╚══╝")
-    print("   💥 " + YELLOW + "OFFLINE TOOL BY BROKEN NADEEM" + RESET + " 💥")
+    print("   💥 " + YELLOW + "OFFLINE TOOL" + RESET + " BY BROKEN NADEEM 💥")
     print(RESET)
 
 # 🔁 MAIN MENU
@@ -149,7 +153,7 @@ def menu():
         elif choice == "3":
             display_sms()
         elif choice == "4":
-            print("\n👋 Exiting. Thank you, BROKENNADEEM 🖤")
+            print("\n👋 Exiting. Thank you, BROKEN NADEEM 🖤")
             break
         else:
             print(RED + "\n❌ Invalid choice! Try again." + RESET)
