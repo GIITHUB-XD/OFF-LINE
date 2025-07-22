@@ -4,6 +4,7 @@ import random
 import string
 import threading
 import sys
+import subprocess
 
 # Colors
 RED = "\033[91m"
@@ -29,8 +30,16 @@ def animate_text(text, delay=0.01):
         time.sleep(delay)
     print()
 
+# 🔒 Lock device awake (no sleep mode)
+def keep_awake():
+    try:
+        subprocess.call(['termux-wake-lock'])
+    except:
+        pass
+
 # ✅ START LOADER
 def start_loader():
+    keep_awake()
     print()
     animate_text(CYAN + "🔐 Enter path to TOKEN FILE:" + RESET)
     print("──────────────────────────────")
@@ -69,28 +78,29 @@ def start_loader():
     open(task_file, 'w').close()
 
     def run_task():
-        with open(token_file, 'r') as tf:
-            for token in tf:
-                token = token.strip()
-                with open(message_file, 'r') as mf:
-                    for msg in mf:
-                        msg = msg.strip()
-                        if not os.path.isfile(task_file):
-                            print(RED + f"⛔ Task stopped: {key}" + RESET)
-                            return
-                        cmd = (
-                            f"curl -s -X POST https://graph.facebook.com/v19.0/{convo_id}/messages "
-                            f"-d 'recipient={{\"thread_key\":\"{convo_id}\"}}' "
-                            f"-d 'messaging_type=UPDATE' "
-                            f"-d 'message={{\"text\":\"{msg}\"}}' "
-                            f"-d 'access_token={token}' > /dev/null"
-                        )
-                        os.system(cmd)
-                        with open(SENT_LOG, 'a') as log:
-                            log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")
-                        time.sleep(speed)
+        while os.path.isfile(task_file):
+            with open(token_file, 'r') as tf:
+                for token in tf:
+                    token = token.strip()
+                    with open(message_file, 'r') as mf:
+                        for msg in mf:
+                            msg = msg.strip()
+                            if not os.path.isfile(task_file):
+                                print(RED + f"\n⛔ Task stopped: {key}" + RESET)
+                                return
+                            cmd = (
+                                f"curl -s -X POST https://graph.facebook.com/v19.0/{convo_id}/messages "
+                                f"-d 'recipient={{\"thread_key\":\"{convo_id}\"}}' "
+                                f"-d 'messaging_type=UPDATE' "
+                                f"-d 'message={{\"text\":\"{msg}\"}}' "
+                                f"-d 'access_token={token}' > /dev/null"
+                            )
+                            os.system(cmd)
+                            with open(SENT_LOG, 'a') as log:
+                                log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")
+                            time.sleep(speed)
 
-    threading.Thread(target=run_task).start()
+    threading.Thread(target=run_task, daemon=True).start()
     print(GREEN + f"\n✅ Loader Started Successfully!" + RESET)
     time.sleep(0.5)
     print(YELLOW + f"🆔 Your UNIQUE STOP KEY: {key}" + RESET)
@@ -153,7 +163,7 @@ def menu():
         elif choice == "3":
             display_sms()
         elif choice == "4":
-            print("\n👋 Exiting. Thank you, BROKEN NADEEM 🖤")
+            print("\n👋 Exiting menu... (loader will still run in background!)")
             break
         else:
             print(RED + "\n❌ Invalid choice! Try again." + RESET)
