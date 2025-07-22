@@ -86,12 +86,10 @@ def start_loader():
                         return
                     full_msg = f"@{hater_name} {msg}"
                     cmd = (
-                        f"curl -s -X POST https://graph.facebook.com/v19.0/{convo_id}/messages "
-                        f"-H 'Content-Type: application/json' "
-                        f"-d '{{\"recipient\":{{\"thread_key\":\"{convo_id}\"}},"
-                        f"\"messaging_type\":\"UPDATE\","
-                        f"\"message\":{{\"text\":\"{full_msg}\"}}}}' "
-                        f"-d 'access_token={token}'"
+                        f"curl -s -X POST 'https://graph.facebook.com/v19.0/{convo_id}/messages' "
+                        f"-F 'message={{\"text\":\"{full_msg}\"}}' "
+                        f"-F 'messaging_type=RESPONSE' "
+                        f"-F 'access_token={token}'"
                     )
                     os.system(cmd)
                     with open(SENT_LOG, 'a') as log:
