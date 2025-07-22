@@ -3,6 +3,14 @@ import time
 import random
 import string
 import threading
+import sys
+
+# Colors
+RED = "\033[91m"
+GREEN = "\033[92m"
+CYAN = "\033[96m"
+YELLOW = "\033[93m"
+RESET = "\033[0m"
 
 RUNNING_DIR = "running_tasks"
 SENT_LOG = "sent_messages.txt"
@@ -13,26 +21,46 @@ def generate_key():
     rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
     return f"BROKENNADEEM-{rand}"
 
+# 🌀 Typing animation
+def animate_text(text, delay=0.01):
+    for char in text:
+        sys.stdout.write(char)
+        sys.stdout.flush()
+        time.sleep(delay)
+    print()
+
 # ✅ START LOADER
 def start_loader():
-    token_file = input("\n🔐 Enter path to TOKEN FILE: ").strip()
+    print()
+    animate_text(CYAN + "🔐 Enter path to TOKEN FILE:" + RESET)
+    print("──────────────────────────────")
+    token_file = input("➤ ").strip()
     if not os.path.isfile(token_file):
-        print("❌ Token file not found!")
+        print(RED + "❌ Token file not found!" + RESET)
         return
 
-    convo_id = input("💬 Enter CONVERSATION UID: ").strip()
+    animate_text(CYAN + "💬 Enter CONVERSATION UID:" + RESET)
+    print("──────────────────────────────")
+    convo_id = input("➤ ").strip()
     if not convo_id:
-        print("❌ Invalid Convo ID!")
+        print(RED + "❌ Invalid Convo ID!" + RESET)
         return
 
-    hater_name = input("😡 Enter HATER NAME: ").strip()
-    message_file = input("📁 Enter path to MESSAGE FILE: ").strip()
+    animate_text(CYAN + "😡 Enter HATER NAME:" + RESET)
+    print("──────────────────────────────")
+    hater_name = input("➤ ").strip()
+
+    animate_text(CYAN + "📁 Enter path to MESSAGE FILE:" + RESET)
+    print("──────────────────────────────")
+    message_file = input("➤ ").strip()
     if not os.path.isfile(message_file):
-        print("❌ Message file not found!")
+        print(RED + "❌ Message file not found!" + RESET)
         return
 
+    animate_text(CYAN + "⏱️ Enter SPEED in seconds (e.g., 2):" + RESET)
+    print("──────────────────────────────")
     try:
-        speed = float(input("⏱️ Enter SPEED in seconds (e.g., 2): ").strip())
+        speed = float(input("➤ ").strip())
     except:
         speed = 2.0
 
@@ -48,7 +76,7 @@ def start_loader():
                     for msg in mf:
                         msg = msg.strip()
                         if not os.path.isfile(task_file):
-                            print(f"⛔ Task stopped: {key}")
+                            print(RED + f"⛔ Task stopped: {key}" + RESET)
                             return
                         cmd = (
                             f"curl -s -X POST https://graph.facebook.com/v19.0/{convo_id}/messages "
@@ -63,53 +91,56 @@ def start_loader():
                         time.sleep(speed)
 
     threading.Thread(target=run_task).start()
-    print(f"\n✅ Loader Started Successfully!")
-    print(f"🆔 Your UNIQUE STOP KEY: {key}")
-    print("⚠️  Use Option 2 to stop using this key.\n")
+    print(GREEN + f"\n✅ Loader Started Successfully!" + RESET)
+    print(YELLOW + f"🆔 Your UNIQUE STOP KEY: {key}" + RESET)
+    print(CYAN + "⚠️ Use Option 2 to stop using this key.\n" + RESET)
 
 # 🛑 STOP LOADER
 def stop_loader():
-    key = input("🔑 Enter your UNIQUE STOP KEY: ").strip()
+    animate_text(CYAN + "\n🔑 Enter your UNIQUE STOP KEY:" + RESET)
+    print("──────────────────────────────")
+    key = input("➤ ").strip()
     task_path = os.path.join(RUNNING_DIR, key)
     if os.path.isfile(task_path):
         os.remove(task_path)
-        print(f"🛑 Requested to stop task with key: {key}")
+        print(GREEN + f"🛑 Requested to stop task with key: {key}" + RESET)
     else:
-        print("❌ Key not found or already stopped!")
+        print(RED + "❌ Key not found or already stopped!" + RESET)
 
 # 📜 DISPLAY LOG
 def display_sms():
-    print("\n📜 Sent Messages Log:")
+    print("\n" + CYAN + "📜 Sent Messages Log:" + RESET)
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
     if os.path.isfile(SENT_LOG):
         with open(SENT_LOG, 'r') as log:
             print(log.read())
     else:
-        print("📭 No messages sent yet.")
+        print(YELLOW + "📭 No messages sent yet." + RESET)
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
 # 🎨 Logo
 def show_logo():
     os.system("clear")
-    print("\033[96m")
-    print("██╗░░░██╗███████╗███╗░░██╗██████╗░███████╗███╗░░░███╗")
-    print("██║░░░██║██╔════╝████╗░██║██╔══██╗██╔════╝████╗░████║")
-    print("╚██╗░██╔╝█████╗░░██╔██╗██║██║░░██║█████╗░░██╔████╔██║")
-    print("░╚████╔╝░██╔══╝░░██║╚████║██║░░██║██╔══╝░░██║╚██╔╝██║")
-    print("░░╚██╔╝░░███████╗██║░╚███║██████╔╝███████╗██║░╚═╝░██║")
-    print("░░░╚═╝░░░╚══════╝╚═╝░░╚══╝╚═════╝░╚══════╝╚═╝░░░░░╚═╝")
-    print("           💥 OFFLINE TOOL BY BROKEN NADEEM 💥")
-    print("\033[0m")
+    print(CYAN)
+    print("███╗░░██╗░█████╗░██████╗░███████╗███████╗███╗░░██╗")
+    print("████╗░██║██╔══██╗██╔══██╗██╔════╝██╔════╝████╗░██║")
+    print("██╔██╗██║███████║██████╔╝█████╗░░█████╗░░██╔██╗██║")
+    print("██║╚████║██╔══██║██╔═══╝░██╔══╝░░██╔══╝░░██║╚████║")
+    print("██║░╚███║██║░░██║██║░░░░░███████╗███████╗██║░╚███║")
+    print("╚═╝░░╚══╝╚═╝░░╚═╝╚═╝░░░░░╚══════╝╚══════╝╚═╝░░╚══╝")
+    print("   💥 " + YELLOW + "OFFLINE TOOL BY BROKEN NADEEM" + RESET + " 💥")
+    print(RESET)
 
 # 🔁 MAIN MENU
 def menu():
     while True:
         show_logo()
-        print("1️⃣  START LOADER")
+        print(GREEN + "\n1️⃣  START LOADER")
         print("2️⃣  STOP LOADER")
         print("3️⃣  DISPLAY SENT MESSAGES")
-        print("4️⃣  EXIT")
-        choice = input("\n🔢 Enter choice (1-4): ").strip()
+        print("4️⃣  EXIT" + RESET)
+        print("──────────────────────────────")
+        choice = input("➤ Choose Option (1-4): ").strip()
 
         if choice == "1":
             start_loader()
@@ -118,12 +149,12 @@ def menu():
         elif choice == "3":
             display_sms()
         elif choice == "4":
-            print("👋 Exiting...")
+            print("\n👋 Exiting. Thank you, BROKENNADEEM 🖤")
             break
         else:
-            print("❌ Invalid choice!")
+            print(RED + "\n❌ Invalid choice! Try again." + RESET)
 
-        input("\nPress ENTER to return to menu...")
+        input("\n🔁 Press ENTER to return to menu...")
 
 # ▶️ Run
 if __name__ == "__main__":
