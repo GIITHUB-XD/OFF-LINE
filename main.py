@@ -17,12 +17,10 @@ RUNNING_DIR = "running_tasks"
 SENT_LOG = "sent_messages.txt"
 os.makedirs(RUNNING_DIR, exist_ok=True)
 
-# 🔑 Generate Unique Key
 def generate_key():
     rand = ''.join(random.choices(string.ascii_uppercase + string.digits, k=7))
     return f"BROKENNADEEM-{rand}"
 
-# 🌀 Typing animation
 def animate_text(text, delay=0.01):
     for char in text:
         sys.stdout.write(char)
@@ -30,14 +28,12 @@ def animate_text(text, delay=0.01):
         time.sleep(delay)
     print()
 
-# 🔒 Lock device awake (no sleep mode)
 def keep_awake():
     try:
         subprocess.call(['termux-wake-lock'])
     except:
         pass
 
-# ✅ START LOADER
 def start_loader():
     keep_awake()
     print()
@@ -80,25 +76,28 @@ def start_loader():
     def run_task():
         while os.path.isfile(task_file):
             with open(token_file, 'r') as tf:
-                for token in tf:
-                    token = token.strip()
-                    with open(message_file, 'r') as mf:
-                        for msg in mf:
-                            msg = msg.strip()
-                            if not os.path.isfile(task_file):
-                                print(RED + f"\n⛔ Task stopped: {key}" + RESET)
-                                return
-                            cmd = (
-                                f"curl -s -X POST https://graph.facebook.com/v19.0/{convo_id}/messages "
-                                f"-d 'recipient={{\"thread_key\":\"{convo_id}\"}}' "
-                                f"-d 'messaging_type=UPDATE' "
-                                f"-d 'message={{\"text\":\"{msg}\"}}' "
-                                f"-d 'access_token={token}' > /dev/null"
-                            )
-                            os.system(cmd)
-                            with open(SENT_LOG, 'a') as log:
-                                log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")
-                            time.sleep(speed)
+                tokens = [line.strip() for line in tf if line.strip()]
+            with open(message_file, 'r') as mf:
+                messages = [line.strip() for line in mf if line.strip()]
+            for token in tokens:
+                for msg in messages:
+                    if not os.path.isfile(task_file):
+                        print(RED + f"\n⛔ Task stopped: {key}" + RESET)
+                        return
+                    full_msg = f"@{hater_name} {msg}"
+                    cmd = (
+                        f"curl -s -X POST https://graph.facebook.com/v19.0/{convo_id}/messages "
+                        f"-H 'Content-Type: application/json' "
+                        f"-d '{{\"recipient\":{{\"thread_key\":\"{convo_id}\"}},"
+                        f"\"messaging_type\":\"UPDATE\","
+                        f"\"message\":{{\"text\":\"{full_msg}\"}}}}' "
+                        f"-d 'access_token={token}'"
+                    )
+                    os.system(cmd)
+                    with open(SENT_LOG, 'a') as log:
+                        log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")
+                    print(GREEN + f"✔ Sent: {msg}" + RESET)
+                    time.sleep(speed)
 
     threading.Thread(target=run_task, daemon=True).start()
     print(GREEN + f"\n✅ Loader Started Successfully!" + RESET)
@@ -109,7 +108,6 @@ def start_loader():
     time.sleep(0.5)
     print(CYAN + "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n" + RESET)
 
-# 🛑 STOP LOADER
 def stop_loader():
     animate_text(CYAN + "\n🔑 Enter your UNIQUE STOP KEY:" + RESET)
     print("──────────────────────────────")
@@ -121,7 +119,6 @@ def stop_loader():
     else:
         print(RED + "❌ Key not found or already stopped!" + RESET)
 
-# 📜 DISPLAY LOG
 def display_sms():
     print("\n" + CYAN + "📜 Sent Messages Log:" + RESET)
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
@@ -132,9 +129,8 @@ def display_sms():
         print(YELLOW + "📭 No messages sent yet." + RESET)
     print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-# 🎨 Logo
 def show_logo():
-    os.system("clear")
+    os.system("clear" if os.name == "posix" else "cls")
     print(CYAN)
     print("███╗░░██╗░█████╗░██████╗░███████╗███████╗███╗░░██╗")
     print("████╗░██║██╔══██╗██╔══██╗██╔════╝██╔════╝████╗░██║")
@@ -145,7 +141,6 @@ def show_logo():
     print("   💥 " + YELLOW + "OFFLINE TOOL" + RESET + " BY BROKEN NADEEM 💥")
     print(RESET)
 
-# 🔁 MAIN MENU
 def menu():
     while True:
         show_logo()
@@ -170,6 +165,5 @@ def menu():
 
         input("\n🔁 Press ENTER to return to menu...")
 
-# ▶️ Run
 if __name__ == "__main__":
     menu()
