@@ -6,6 +6,7 @@ import threading
 import sys
 import subprocess
 import json
+import requests
 
 # Colors
 RED = "\033[91m"
@@ -16,6 +17,7 @@ RESET = "\033[0m"
 
 RUNNING_DIR = "running_tasks"
 SENT_LOG = "sent_messages.txt"
+BLOCKED_LOG = "blocked_tokens.txt"
 os.makedirs(RUNNING_DIR, exist_ok=True)
 
 def generate_key():
@@ -35,8 +37,10 @@ def keep_awake():
     except:
         pass
 
+def is_valid_user_token(token):
+    return token.startswith("EAAD") or token.startswith("EAAB") or token.startswith("EAAZ")
+
 def send_message(token, convo_id, message):
-    import requests
     url = f"https://graph.facebook.com/v19.0/{convo_id}/messages"
     payload = {
         "messaging_type": "RESPONSE",
@@ -52,21 +56,16 @@ def send_message(token, convo_id, message):
         if "error" in data:
             code = data["error"].get("code")
             if code == 368:
-                print(RED + "⚠️ Blocked Token Detected (code 368). Skipping token." + RESET)
-                return False
-            else:
-                print(RED + f"⚠️ Error: {data['error'].get('message')}" + RESET)
-                return False
-        return True
-
-    except Exception as e:
-        print(RED + f"⚠️ Network error: {e}" + RESET)
-        return False
+                return "blocked"
+            return "error"
+        return "sent"
+    except Exception:
+        return "network"
 
 def start_loader():
     keep_awake()
     print()
-    animate_text(CYAN + "🔐 Enter path to TOKEN FILE:" + RESET)
+    animate_text(CYAN + "🔐 Enter path to TOKEN FILE (EAAD only):" + RESET)
     print("──────────────────────────────")
     token_file = input("➤ ").strip()
     if not os.path.isfile(token_file):
@@ -91,7 +90,7 @@ def start_loader():
         print(RED + "❌ Message file not found!" + RESET)  
         return  
 
-    animate_text(CYAN + "⏱️ Enter SPEED in seconds (recommended: 5-10):" + RESET)  
+    animate_text(CYAN + "⏱️ Enter SPEED in seconds (recommended: 5–10):" + RESET)  
     print("──────────────────────────────")  
     try:  
         speed = float(input("➤ ").strip())  
@@ -103,24 +102,49 @@ def start_loader():
     open(task_file, 'w').close()  
 
     def run_task():  
-        while os.path.isfile(task_file):  
-            with open(token_file, 'r') as tf:  
-                tokens = [line.strip() for line in tf if line.strip()]  
-            with open(message_file, 'r') as mf:  
-                messages = [line.strip() for line in mf if line.strip()]  
+        blocked = []
 
-            for token in tokens:  
-                for msg in messages:  
-                    if not os.path.isfile(task_file):  
-                        print(RED + f"\n⛔ Task stopped: {key}" + RESET)  
-                        return  
-                    full_msg = f"@{hater_name} {msg}"  
-                    success = send_message(token, convo_id, full_msg)
-                    if success:
-                        with open(SENT_LOG, 'a') as log:  
-                            log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")  
-                        print(GREEN + f"✔ Sent: {msg}" + RESET)  
+        with open(token_file, 'r') as tf:  
+            tokens = [line.strip() for line in tf if line.strip() and is_valid_user_token(line.strip())]
+
+        if not tokens:
+            print(RED + "❌ No valid EAAD user tokens found!" + RESET)
+            os.remove(task_file)
+            return
+
+        with open(message_file, 'r') as mf:  
+            messages = [line.strip() for line in mf if line.strip()]  
+
+        for token in tokens:
+            token_blocked = False
+            for msg in messages:  
+                if not os.path.isfile(task_file):  
+                    print(RED + f"\n⛔ Task stopped: {key}" + RESET)  
+                    return  
+                full_msg = f"@{hater_name} {msg}"  
+                result = send_message(token, convo_id, full_msg)
+                if result == "sent":
+                    with open(SENT_LOG, 'a') as log:  
+                        log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")  
+                    print(GREEN + f"✔ Sent: {msg}" + RESET)  
                     time.sleep(speed)
+                elif result == "blocked":
+                    print(RED + "⛔ Blocked Token Detected (code 368). Skipping." + RESET)
+                    token_blocked = True
+                    blocked.append(token)
+                    break
+                elif result == "network":
+                    print(RED + "🌐 Network error. Retrying..." + RESET)
+                    time.sleep(3)
+                else:
+                    print(YELLOW + f"⚠️ Error sending message. Skipping message." + RESET)
+                    time.sleep(2)
+
+        if blocked:
+            with open(BLOCKED_LOG, 'a') as bfile:
+                for b in blocked:
+                    bfile.write(b + "\n")
+            print(RED + f"\n⛔ {len(blocked)} token(s) blocked. Logged to {BLOCKED_LOG}" + RESET)
 
     threading.Thread(target=run_task, daemon=True).start()  
     print(GREEN + f"\n✅ Loader Started Successfully!" + RESET)  
@@ -161,7 +185,7 @@ def show_logo():
     print("██║╚████║██╔══██║██╔═══╝░██╔══╝░░██╔══╝░░██║╚████║")
     print("██║░╚███║██║░░██║██║░░░░░███████╗███████╗██║░╚███║")
     print("╚═╝░░╚══╝╚═╝░░╚═╝╚═╝░░░░░╚══════╝╚══════╝╚═╝░░╚══╝")
-    print("   💥 " + YELLOW + "OFFLINE TOOL" + RESET + " BY BROKEN NADEEM 💥")
+    print("   💥 " + YELLOW + "ONLY EAAD USER TOKENS SUPPORTED 💥" + RESET)
     print(RESET)
 
 def menu():
