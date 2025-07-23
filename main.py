@@ -5,8 +5,9 @@ import string
 import threading
 import sys
 import subprocess
+import json
 
-# ✅ Colors
+# Colors
 RED = "\033[91m"
 GREEN = "\033[92m"
 CYAN = "\033[96m"
@@ -33,6 +34,34 @@ def keep_awake():
         subprocess.call(['termux-wake-lock'])
     except:
         pass
+
+def send_message(token, convo_id, message):
+    import requests
+    url = f"https://graph.facebook.com/v19.0/{convo_id}/messages"
+    payload = {
+        "messaging_type": "RESPONSE",
+        "message": {"text": message},
+        "access_token": token
+    }
+    headers = {"Content-Type": "application/json"}
+
+    try:
+        response = requests.post(url, headers=headers, json=payload)
+        data = response.json()
+
+        if "error" in data:
+            code = data["error"].get("code")
+            if code == 368:
+                print(RED + "⚠️ Blocked Token Detected (code 368). Skipping token." + RESET)
+                return False
+            else:
+                print(RED + f"⚠️ Error: {data['error'].get('message')}" + RESET)
+                return False
+        return True
+
+    except Exception as e:
+        print(RED + f"⚠️ Network error: {e}" + RESET)
+        return False
 
 def start_loader():
     keep_awake()
@@ -62,12 +91,12 @@ def start_loader():
         print(RED + "❌ Message file not found!" + RESET)  
         return  
 
-    animate_text(CYAN + "⏱️ Enter SPEED in seconds (e.g., 2):" + RESET)  
+    animate_text(CYAN + "⏱️ Enter SPEED in seconds (recommended: 5-10):" + RESET)  
     print("──────────────────────────────")  
     try:  
         speed = float(input("➤ ").strip())  
     except:  
-        speed = 2.0  
+        speed = 5.0
 
     key = generate_key()  
     task_file = os.path.join(RUNNING_DIR, key)  
@@ -86,19 +115,12 @@ def start_loader():
                         print(RED + f"\n⛔ Task stopped: {key}" + RESET)  
                         return  
                     full_msg = f"@{hater_name} {msg}"  
-                    # ✅ Escape message correctly
-                    escaped_msg = full_msg.replace('"', '\\"')
-                    cmd = (
-                        f"curl -s -X POST 'https://graph.facebook.com/v19.0/{convo_id}/messages' "
-                        f"-F 'messaging_type=RESPONSE' "
-                        f'-F "message={{\\\"text\\\":\\\"{escaped_msg}\\\"}}" '
-                        f"-F 'access_token={token}'"
-                    )
-                    os.system(cmd)
-                    with open(SENT_LOG, 'a') as log:  
-                        log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")  
-                    print(GREEN + f"✔ Sent: {msg}" + RESET)  
-                    time.sleep(speed)  
+                    success = send_message(token, convo_id, full_msg)
+                    if success:
+                        with open(SENT_LOG, 'a') as log:  
+                            log.write(f"{time.strftime('%Y-%m-%d %H:%M:%S')} | {hater_name} ➤ {msg}\n")  
+                        print(GREEN + f"✔ Sent: {msg}" + RESET)  
+                    time.sleep(speed)
 
     threading.Thread(target=run_task, daemon=True).start()  
     print(GREEN + f"\n✅ Loader Started Successfully!" + RESET)  
